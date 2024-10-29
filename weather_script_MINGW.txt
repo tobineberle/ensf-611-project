@@ -1,0 +1,9 @@
+for year in $(seq 2023 2024);do for month in $(seq 1 12);do wget -O "yoho_wx.csv" --content-disposition "https://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=27378&Year=${year}&Month=${month}&Day=14&timeframe=2&submit= Download+Data";done;done
+
+##HOW TO USE##
+Use id=6844 for Yoho
+Use id=27378 for Banff
+Make sure you change the file save name for the different areas you save
+Make sure you run mingw in the dir you want to save the files
+Change the year seq for the years you want, change the month seq for the months you want
+Need to run it through a cleaning script when the raw data is downloaded

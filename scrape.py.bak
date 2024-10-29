@@ -1,0 +1,78 @@
+
+###Unneeded Code###
+# Web Scraping Imports
+# import time
+# import random
+# from bs4 import BeautifulSoup as soup
+# from selenium import webdriver
+# from selenium.webdriver.common.by import By
+
+# Web scraping definitions
+
+
+def scrapePage(html):
+
+    # #Connect to the specific day/location archive
+    # site_url = 'https://avalanche.ca/forecasts/archive/' + date + '?lat=' + lat + '&lng=' + long
+    # print(site_url)
+    # try:
+    #     request = rq.get(site_url)
+    #     request.raise_for_status()
+
+    # except rq.exceptions.ConnectionError as err:
+    #     raise SystemExit(err)
+
+    # except rq.exceptions.HTTPError as err:
+    #     raise SystemError(err)
+    
+    # open('avalanche_data_today.txt', 'wb').write(request.content)
+    
+    #Optional save webpage data to txt
+    if False:
+        with open('avalanche_data.txt', 'w', encoding= 'utf-8') as file:
+            file.write(html)
+
+    webpage = soup(html, features= 'html.parser')
+    # btl = webpage.select_one(
+    #     '#primary-drawer > div > section:nth-child(2) > div.Shim_horizontal__1G9Rq.Shim_right__cS7kQ.Shim_left__otobD > section:nth-child(1) > svg > g:nth-child(24) > text > title')
+    
+    # print(btl.text)
+
+    regex = re.compile('Danger_Day.*')
+    for each in webpage.find_all('section', {'class': regex}):
+        print(each)
+
+
+    btl_find_re = webpage.find_all('section', {'class': regex})[0].find_all('title')
+    n_btl_find_re = webpage.find_all('section', {'class': regex})[1].find_all('title')
+    nn_btl_find_re = webpage.find_all('section', {'class': regex})[2].find_all('title')
+
+    #Add to dataframe
+    #Note df for avalanche data will be below_treeline_rating, treeline_rating, alpine_rating, avy_problem_1, avy_problem_1_chance, avy_problem_2, avy_problem_2_chance, avy_problem_3, avy_problem_3_chance 
+    result_df = pd.DataFrame([])
+    return result_df
+
+
+def getPage(date, lat, long):
+    driver = webdriver.Chrome()
+    driver.maximize_window()
+    site_url = 'https://avalanche.ca/forecasts/archive/' + date + '?lat=' + lat + '&lng=' + long
+
+    try:
+        driver.get(site_url)
+        time.sleep(3)
+        #Click on element
+        driver.find_element(By.XPATH, '//*[@id="main"]/section[1]/div/footer/button').click()
+        print("LOG: Clicked continue button for ", date)
+        time.sleep(3)
+
+    except Exception as exp:
+        print(exp)
+    
+    finally:
+        html = driver.page_source
+        driver.quit()
+
+    return html
+
+main()
