@@ -1,4 +1,4 @@
-for year in $(seq 2023 2024);do for month in $(seq 1 12);do wget -O "yoho_wx.csv" --content-disposition "https://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=27378&Year=${year}&Month=${month}&Day=14&timeframe=2&submit= Download+Data";done;done
+for year in $(seq 2023 2023);do for month in $(seq 1 12);do wget -O "yoho_wx_2023.csv" --content-disposition "https://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=6844&Year=${year}&Month=${month}&Day=14&timeframe=2&submit= Download+Data";done;done
 
 ##HOW TO USE##
 Use id=6844 for Yoho

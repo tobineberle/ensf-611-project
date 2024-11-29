@@ -4,22 +4,30 @@ import json
 import regex as re
 import datetime
 from shapely.geometry import shape, Point
+import os
 
 def main():
     date = '2021-01-01'
     lat = '51.436240'
     long = '-116.219068'
     area = 'Kootenay-Boundary'
-
+    output_path = './avcan_data/avcan_data_2024.csv'
     api = APIRequest(date, area, lat, long)
 
-    df = pd.DataFrame(columns=['Date', 'btl_rating', 'tln_rating', 'alp_rating', 'problem1', 'problem2', 'problem3', 'chance1', 'chance2', 'chance3'])
+    # df = pd.DataFrame(columns=['Date', 'btl_rating', 'tln_rating', 'alp_rating', 'problem1', 'problem2', 'problem3', 'chance1', 'chance2', 'chance3'])
 
-    for single_date in dateRange(datetime.date(2020, 1, 1), datetime.date(2020, 2, 1)):
+    for single_date in dateRange(datetime.date(2024, 1, 1), datetime.date(2024, 11, 13)):
         api.date = single_date
-        data = api.parseRequest()
-        df = pd.concat()
+        try:
+            data = api.parseRequest()
+            df = pd.DataFrame([data], columns=['date', 'btl_rating', 'tln_rating', 'alp_rating', 'problem1', 'problem2', 'problem3', 'chance1', 'chance2', 'chance3'])
+            # df = pd.concat([pd.DataFrame([data], columns= df.columns), df], ignore_index= True)
+            df.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
 
+        except Exception as e:
+            print(e)
+        
+    
 def dateRange(start_date: datetime.date , end_date: datetime.date):
     days = int((end_date - start_date).days)
     for n in range(days):
@@ -44,13 +52,24 @@ class APIRequest():
         data =[self.date]
         if self.date < self.flexibility_switch_date:
             json = self.inflexibleRequest()
+
+            if json == []:
+                return [self.date, 'norating', 'norating', 'norating', pd.NA, pd.NA, pd.NA, pd.NA, pd.NA, pd.NA]
+
             for i in range(len(json)):
                 if json[i]['area']['name'] == self.area:
                     break
             json = json[i]
-               
+            
+            if json['report']['dangerRatings'] == []:
+                return [self.date, 'norating', 'norating', 'norating', pd.NA, pd.NA, pd.NA, pd.NA, pd.NA, pd.NA]
+        
         else:
             json = self.flexibleRequest()
+            if json == []:
+                return [self.date, 'norating', 'norating', 'norating', pd.NA, pd.NA, pd.NA, pd.NA, pd.NA, pd.NA]
+            
+    
         #Add ratings
         data.append(json['report']['dangerRatings'][0]['ratings']['btl']['rating']['value'])
         data.append(json['report']['dangerRatings'][0]['ratings']['tln']['rating']['value'])
@@ -87,6 +106,7 @@ class APIRequest():
         response_text = response.text
         response.close()
         return json.loads(response_text)
+
     
 
     def flexibleRequest(self):
@@ -101,7 +121,7 @@ class APIRequest():
         except Exception as exp:
             print('ERROR: Exception occured in api.flexibleRequest()/area.')
             print(exp)
-            return
+            
 
 
         metadata_url = 'https://api.avalanche.ca/forecasts/en/metadata?date=' + str(self.date) +'T08:00:00.000Z'
@@ -115,7 +135,7 @@ class APIRequest():
         except Exception as exp:
             print('ERROR: Exception occured in api.flexibleRequest()/meta.')
             print(exp)
-            return  
+              
 
         
         #Link meta data to an area using shapely
@@ -149,9 +169,7 @@ class APIRequest():
                         return id_json
         
         meta_response.close()
-        id_response.close()
-
-        print('ERROR: Exception occured in api.flexibleRequest().')
-        return None
+        print('ERROR: Exception occured in api.flexibleRequest(). Location not found.')
+        return []
 
 main()
